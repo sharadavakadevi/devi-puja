@@ -1,0 +1,9 @@
+{
+  "name": "Telugu Devotional and Vedic Learning",
+  "short_name": "Devotional Veda",
+  "description": "Telugu devotional prayers, puja procedures and Vedic learning",
+  "lang": "te",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait"
+}
