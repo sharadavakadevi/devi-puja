@@ -81,6 +81,46 @@ function applySankalpamDynamic(text){
     text=text.replace("…… వాసరే", vara);
     return text;
 }
+function createNumberBlocks(content){
+
+    let blocks = [];
+    let current = "";
+
+    content.forEach(line => {
+
+        let text = String(line).trim();
+
+        if(!text){
+            if(current.trim()){
+                blocks.push(current.trim());
+                current = "";
+            }
+            return;
+        }
+
+        current += (current ? "\n" : "") + text;
+
+
+        // Only separate number marker lines
+        if(
+            /^[౦-౯]+\s*॥$/.test(text) ||
+            /^\|\|$/.test(text)
+        ){
+
+            blocks.push(current.trim());
+            current = "";
+
+        }
+
+    });
+
+
+    if(current.trim()){
+        blocks.push(current.trim());
+    }
+
+    return blocks;
+}
 async function loadJson(){
     const titleEl=document.getElementById("title");
     const contentEl=document.getElementById("content");
@@ -94,15 +134,45 @@ async function loadJson(){
         titleEl.textContent=data.title || "";
         contentEl.replaceChildren();
         const content=filterMantrapushpamContent(data.content || [], file);
-        content.forEach(line=>{
-            let text=String(line);
-            if(file.includes("Sankalpam")){
-                text=applySankalpamDynamic(text);
+        let contentToRender = content;
+        if(document.body.dataset.readerType === "number-block"){
+            contentToRender = createNumberBlocks(content);
+        }
+        console.log("Original:", content);
+        console.log("Blocked:", contentToRender);
+        contentToRender.forEach(line=>{
+        let text = String(line);
+        if(file.includes("Sankalpam")){
+            text = applySankalpamDynamic(text);
+        }
+        let element;
+        if(!text.trim()){
+
+            element = document.createElement("div");
+            element.className = "puja-space";
+
+        }
+        // heading line
+        else if(text.trim().endsWith("-") || text.trim().endsWith("–") || text.trim().endsWith("—")){
+            element = document.createElement("div");
+            element.className = "puja-section";
+
+        }
+        // normal mantra/content
+       else{
+            element = document.createElement("div");
+            if(document.body.dataset.readerType === "number-block"){
+                element.className = "number-block";
             }
-            const paragraph=document.createElement("p");
-            paragraph.innerHTML=text.replace(/\n/g,"<br><br>");
-            contentEl.appendChild(paragraph);
-        });
+        
+            else{
+                element.className = "puja-line";
+            }
+       }
+        element.innerHTML = text.replace(/\n/g,"<br>");
+        contentEl.appendChild(element);
+
+    });
     }catch(error){
         contentEl.textContent="కంటెంట్ లోడ్ కాలేదు: "+error.message;
         console.error(error);
